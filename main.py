@@ -5,7 +5,7 @@ import numpy as np
 import keras
 
 epochs = 1000
-epoch_save = 10
+epoch_save = 100
 load_num = 200
 batch_size = 40
 num_classes = 20
