@@ -1,4 +1,5 @@
 import os
+import sys
 import util
 import numpy as np
 import keras
@@ -37,7 +38,8 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 if os.path.exists(weight_path):
     print('load model weight...')
     model.load_weights(weight_path)
-else:
+
+if '--train' in sys.argv:
     print('load the trainning data...')
     for epoch in range(epochs):
         data_set = util.load_dataset('data/image/*.*', load_num, input_shape)
