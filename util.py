@@ -24,6 +24,9 @@ def build_modle(input_shape=(256, 256, 3), num_classes=20):
 
 def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, epoch_save=100, weight_path='modle.h5'):
     for epoch in range(epochs):
+        if (epoch + 1) % epoch_save == 0:
+            model.save_weights(weight_path)
+
         data_set = load_dataset(data_path, load_num, input_shape)
         x_train = np.array(data_set[0]).astype(np.float32) / 255.0
         y_train = keras.utils.to_categorical(data_set[1], num_classes)
@@ -42,8 +45,6 @@ def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3)
             y_batch = y_train[start:end]
             loss = model.train_on_batch(x_batch, y_batch)
             print("[Epoch %d/%d] [Batch %d/%d] [D loss %f, acc: %3f%%]" % (epoch, epochs, batch, n_batches, loss[0], loss[1] * 100))
-        if epoch % epoch_save == 0:
-            model.save_weights(weight_path)
     model.save_weights(weight_path)
 
 def predict(model, validate_path, input_shape=(256, 256, 3), num_classes=20, load_num=200):
