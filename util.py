@@ -7,11 +7,9 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 
-def build_modle(input_shape, num_classes):
+def build_modle(input_shape=(256, 256, 3), num_classes=20):
     model = Sequential()
-    model.add(Conv2D(32, kernel_size=(3, 3),
-                    activation='relu',
-                    input_shape=input_shape))
+    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
     model.add(Conv2D(64, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
@@ -19,13 +17,12 @@ def build_modle(input_shape, num_classes):
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(num_classes, activation='softmax'))
-
     model.compile(loss=keras.losses.categorical_crossentropy,
                 optimizer=keras.optimizers.Adadelta(),
                 metrics=['accuracy'])
     return model
 
-def train(model, data_path, load_num, input_shape, num_classes, epochs, batch_size, epoch_save, weight_path):
+def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, epoch_save=100, weight_path='modle.h5'):
     for epoch in range(epochs):
         data_set = load_dataset(data_path, load_num, input_shape)
         x_train = np.array(data_set[0]).astype(np.float32) / 255.0
@@ -48,7 +45,7 @@ def train(model, data_path, load_num, input_shape, num_classes, epochs, batch_si
         if epoch % epoch_save == 0:
             model.save_weights(weight_path)
 
-def predict(model, validate_path, load_num, input_shape, num_classes):
+def predict(model, validate_path, input_shape=(256, 256, 3), num_classes=20, load_num=200):
     test_set = load_dataset(validate_path, load_num, input_shape, False)
     x_test = np.array(test_set[0]).astype(np.float32) / 255.0
     y_test = keras.utils.to_categorical(test_set[1], num_classes)
