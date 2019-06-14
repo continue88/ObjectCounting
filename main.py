@@ -8,7 +8,7 @@ epochs = 1000
 load_num = 400
 batch_size = 100
 num_classes = 20
-input_shape = (256, 256, 3)
+input_shape = (224, 224, 3)
 weight_path = 'modle.h5'
 
 #util.extract_video('data/validate/*.mp4', 5, input_shape)
