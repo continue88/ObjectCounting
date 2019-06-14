@@ -48,6 +48,7 @@ def build_vgg256(input_shape, num_classes):
     model.add(Conv2D(512, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (8, 8, 512)
+    model.add(Flatten())
     model.add(Dense(4096, activation='relu'))
     model.add(Dense(num_classes, activation='softmax'))
     model.compile(loss=keras.losses.categorical_crossentropy,
