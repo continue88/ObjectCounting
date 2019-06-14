@@ -7,7 +7,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 
-def build_modle(input_shape=(256, 256, 3), num_classes=20):
+def build_minist(input_shape, num_classes):
     model = Sequential()
     model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
     model.add(Conv2D(64, (3, 3), activation='relu'))
@@ -21,6 +21,45 @@ def build_modle(input_shape=(256, 256, 3), num_classes=20):
                 optimizer=keras.optimizers.Adadelta(),
                 metrics=['accuracy'])
     return model
+
+def build_vgg256(input_shape, num_classes):
+    model = Sequential()
+    # (256, 256, 3)
+    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (128, 128, 64)
+    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (64, 64, 128)
+    model.add(Conv2D(256, (3, 3), activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (32, 32, 256)
+    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (16, 16, 512)
+    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (8, 8, 512)
+    model.add(Dense(4096, activation='relu'))
+    model.add(Dense(num_classes, activation='softmax'))
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                optimizer=keras.optimizers.Adadelta(),
+                metrics=['accuracy'])
+    return model
+
+def build_modle(input_shape=(256, 256, 3), num_classes=20, model_type='vgg256'):
+    if model_type == 'vgg256':
+        return build_vgg256(input_shape, num_classes)
+    if model_type == 'minist':
+        return build_minist(input_shape, num_classes)
 
 def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, epoch_save=100, weight_path='modle.h5'):
     for epoch in range(epochs):
