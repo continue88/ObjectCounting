@@ -6,15 +6,16 @@ import keras
 
 epochs = 1000
 load_num = 400
-batch_size = 100
+batch_size = 20
 num_classes = 20
 input_shape = (224, 224, 3)
-weight_path = 'modle.h5'
+model_type = 'vgg11' # ['vgg11', 'vgg16', 'minist']
+weight_path = 'modle-%s.h5' % model_type
 
 #util.extract_video('data/validate/*.mp4', 5, input_shape)
 
 print('building modle...')
-model = util.build_modle(input_shape=input_shape, num_classes=num_classes)
+model = util.build_modle(model_type=model_type, input_shape=input_shape, num_classes=num_classes)
 
 if os.path.exists(weight_path):
     print('load model weight...')
