@@ -6,7 +6,7 @@ import keras
 
 epochs = 1000
 load_num = 400
-batch_size = 20
+batch_size = 40
 num_classes = 20
 input_shape = (224, 224, 3)
 model_type = 'vgg11' # ['vgg11', 'vgg16', 'minist']
