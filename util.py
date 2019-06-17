@@ -31,17 +31,17 @@ def build_default(input_shape, num_classes):
     model.add(Conv2D(128, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (56, 56, 128)
-    model.add(Conv2D(256, (3, 3), activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (28, 28, 256)
-    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (14, 14, 512)
-    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (7, 7, 512)
     model.add(Flatten())
-    model.add(Dense(512, activation='relu'))
+    model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(num_classes, activation='softmax'))
     model.compile(loss=keras.losses.categorical_crossentropy,
@@ -127,33 +127,36 @@ def build_modle(input_shape=(256, 256, 3), num_classes=20, model_type='vgg16'):
         return build_minist(input_shape, num_classes)
     return build_default(input_shape, num_classes)
 
-def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, epoch_save=100, weight_path='modle.h5'):
+def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, epoch_batch=10, epoch_save=100, weight_path='modle.h5'):
     for epoch in range(epochs):
         if (epoch + 1) % epoch_save == 0:
             model.save_weights(weight_path)
 
         data_set = load_dataset(data_path, load_num, input_shape)
-        x_train = np.array(data_set[0]).astype(np.float32) / 255.0
         y_train = keras.utils.to_categorical(data_set[1], num_classes)
+        for test_i in range(epoch_batch):
+            images = rotate_images(data_set[0])
+            x_train = np.array(images).astype(np.float32) / 255.0
 
-        train_num = x_train.shape[0]
-        indices = np.arange(train_num)
+            train_num = x_train.shape[0]
+            indices = np.arange(train_num)
 
-        np.random.shuffle(indices)
-        n_batches = int((train_num + batch_size - 1) / batch_size)
-        for batch in range(n_batches):
-            start = batch * batch_size
-            end = (batch + 1) * batch_size
-            if end > train_num:
-                end = train_num
-            x_batch = x_train[start:end]
-            y_batch = y_train[start:end]
-            loss = model.train_on_batch(x_batch, y_batch)
-            print("[Epoch %d/%d] [Batch %d/%d] [D loss %f, acc: %3f%%]" % (epoch, epochs, batch, n_batches, loss[0], loss[1] * 100))
+            np.random.shuffle(indices)
+            n_batches = int((train_num + batch_size - 1) / batch_size)
+            for batch in range(n_batches):
+                start = batch * batch_size
+                end = (batch + 1) * batch_size
+                if end > train_num:
+                    end = train_num
+                x_batch = x_train[start:end]
+                y_batch = y_train[start:end]
+                loss = model.train_on_batch(x_batch, y_batch)
+                if test_i == 0:
+                    print("[Epoch %d/%d] [Batch %d/%d] [D loss %f, acc: %3f%%]" % (epoch, epochs, batch, n_batches, loss[0], loss[1] * 100))
     model.save_weights(weight_path)
 
 def predict(model, validate_path, input_shape=(256, 256, 3), num_classes=20, load_num=200):
-    test_set = load_dataset(validate_path, load_num, input_shape, False)
+    test_set = load_dataset(validate_path, load_num, input_shape)
     x_test = np.array(test_set[0]).astype(np.float32) / 255.0
     y_test = keras.utils.to_categorical(test_set[1], num_classes)
 
@@ -192,7 +195,15 @@ def rotate_image(image, angle):
     new_img = cv2.warpAffine(image, rot_mat, (col, row), cv2.INTER_LINEAR, 0, cv2.BORDER_REPLICATE)
     return new_img
 
-def load_dataset(path, load_num, input_shape, train=True):
+def rotate_images(image_list):
+    rot_images = []
+    for img in image_list:
+        angle = np.random.randint(0, 360)
+        img = rotate_image(img, angle)
+        rot_images.append(img)
+    return rot_images
+
+def load_dataset(path, load_num, input_shape):
     file_list = glob.glob(path)
     if load_num < len(file_list):
         file_list = np.random.choice(file_list, load_num, replace=False)
@@ -207,9 +218,6 @@ def load_dataset(path, load_num, input_shape, train=True):
         label = int(file_name[:end])
         img = cv2.imread(file)
         img = cv2.resize(img, (width, height))
-        if train:
-            angle = np.random.randint(0, 360)
-            img = rotate_image(img, angle)
         img_list.append(img)
         label_list.append(label)
     return (img_list, label_list)
