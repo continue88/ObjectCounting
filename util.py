@@ -213,3 +213,21 @@ def load_dataset(path, load_num, input_shape, train=True):
         img_list.append(img)
         label_list.append(label)
     return (img_list, label_list)
+
+def crop_video(input, output, resize):
+    input = cv2.VideoCapture(input)
+    output = cv2.VideoWriter(output, int(input.get(cv2.CAP_PROP_FOURCC)), input.get(cv2.CAP_PROP_FPS), resize)
+    success, img = input.read()
+    while success:
+        # 裁剪成正方形
+        height, width, _ = img.shape
+        size = min(height, width)
+        x = int((width - size) / 2)
+        y = int((height - size) / 2)
+        img = img[y:y+size, x:x+size]
+        # 转换到网络输入
+        img = cv2.resize(img, resize, 0, 0, cv2.INTER_CUBIC)
+        output.write(img)
+        success, img = input.read()
+    input.release()
+    output.release()
