@@ -168,7 +168,7 @@ def predict(model, validate_path, input_shape=(256, 256, 3), num_classes=20, loa
     print('test the trainning data...')
     score = model.evaluate(x_test, y_test, verbose=0)
     print('Test loss:', score[0])
-    print('Test accuracy: %f%' % (score[1] * 100))
+    print('Test accuracy: %f%%' % (score[1] * 100))
 
 def extract_video(path, skip, input_shape):
     file_list = glob.glob(path)
