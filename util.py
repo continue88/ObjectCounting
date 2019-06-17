@@ -151,8 +151,8 @@ def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3)
                 x_batch = x_train[start:end]
                 y_batch = y_train[start:end]
                 loss = model.train_on_batch(x_batch, y_batch)
-                if test_i == 0:
-                    print("[Epoch %d/%d] [Batch %d/%d] [D loss %f, acc: %3f%%]" % (epoch, epochs, batch, n_batches, loss[0], loss[1] * 100))
+                if batch == 0:
+                    print("[Epoch %d/%d] [Batch %d/%d] [D loss %f, acc: %3f%%]" % (epoch, epochs, test_i, epoch_batch, loss[0], loss[1] * 100))
     model.save_weights(weight_path)
 
 def predict(model, validate_path, input_shape=(256, 256, 3), num_classes=20, load_num=200):
