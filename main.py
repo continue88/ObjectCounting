@@ -5,11 +5,11 @@ import numpy as np
 import keras
 
 epochs = 1000
-load_num = 400
-batch_size = 40
+load_num = 600
+batch_size = 200
 num_classes = 20
 input_shape = (224, 224, 3)
-model_type = 'vgg11' # ['vgg11', 'vgg16', 'minist']
+model_type = 'default' # ['vgg11', 'vgg16', 'minist', 'default']
 weight_path = 'modle-%s.h5' % model_type
 
 #util.extract_video('data/validate/*.mp4', 5, input_shape)
