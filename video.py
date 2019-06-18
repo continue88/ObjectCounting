@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 num_classes = 20
-input_shape = (224, 224, 3)
+input_shape = (256, 256, 3)
 model_type = 'default' # ['vgg11', 'vgg16', 'minist', 'default']
 weight_path = 'modle-%s.h5' % model_type
 video_path = 'data/video.mp4'
