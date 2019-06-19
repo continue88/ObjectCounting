@@ -25,19 +25,19 @@ def build_minist(input_shape, num_classes):
 def build_default(input_shape, num_classes):
     model = Sequential()
     # (256, 256, 3)
-    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
     model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
     # (64, 64, 64)
-    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
     # (16, 16, 128)
-    model.add(Conv2D(256, (3, 3), activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
     # (4, 4, 256)
     model.add(Flatten())
     model.add(Dropout(0.5))
     model.add(Dense(num_classes, activation='softmax'))
-    model.compile(loss=keras.losses.categorical_crossentropy,
+    model.compile(loss='mse',#keras.losses.categorical_crossentropy,
                 optimizer=keras.optimizers.Adadelta(),
                 metrics=['accuracy'])
     return model
@@ -120,13 +120,14 @@ def build_modle(input_shape=(256, 256, 3), num_classes=20, model_type='vgg16'):
         return build_minist(input_shape, num_classes)
     return build_default(input_shape, num_classes)
 
-def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, epoch_batch=10, epoch_save=100, weight_path='modle.h5'):
+def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, epoch_batch=10, epoch_save=100, weight_path='modle.h5', tboard=None):
     for epoch in range(epochs):
         if (epoch + 1) % epoch_save == 0:
             model.save_weights(weight_path)
 
         data_set = load_dataset(data_path, load_num, input_shape)
         y_train = keras.utils.to_categorical(data_set[1], num_classes)
+        loss = None
         for test_i in range(epoch_batch):
             images = rotate_images(data_set[0])
             x_train = np.array(images).astype(np.float32) / 255.0
@@ -146,6 +147,12 @@ def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3)
                 loss = model.train_on_batch(x_batch, y_batch)
                 if batch == 0:
                     print("[Epoch %d/%d] [Batch %d/%d] [D loss %f, acc: %3f%%]" % (epoch, epochs, test_i, epoch_batch, loss[0], loss[1] * 100))
+            if tboard:
+                tboard.on_batch_end(test_i, {'loss': loss[0], 'acc': loss[1]})
+        if tboard:
+            tboard.on_epoch_end(epoch, {'loss': loss[0], 'acc': loss[1]})
+    if tboard:
+        tboard.on_train_end('done')
     model.save_weights(weight_path)
 
 def predict(model, validate_path, input_shape=(256, 256, 3), num_classes=20, load_num=200):
@@ -161,7 +168,7 @@ def predict(model, validate_path, input_shape=(256, 256, 3), num_classes=20, loa
     print('test the trainning data...')
     score = model.evaluate(x_test, y_test, verbose=0)
     print('Test loss:', score[0])
-    print('Test accuracy: %f', score[1])
+    print('Test accuracy: %f%%' % (score[1] * 100))
 
 def extract_video(path, skip, input_shape):
     file_list = glob.glob(path)
