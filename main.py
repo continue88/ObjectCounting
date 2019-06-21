@@ -48,4 +48,4 @@ if '--train' in sys.argv:
         tboard=tboard)
 
 print('predict data...')
-util.predict(model, 'data/image/*.*', input_shape=input_shape, num_classes=num_classes)
+util.predict(model, 'data/validate/*.*', input_shape=input_shape, num_classes=num_classes)

@@ -18,6 +18,13 @@ model.load_weights(weight_path)
 video = cv2.VideoCapture(video_path)
 success, img = video.read()
 while success:
+    # 裁剪倒正方型
+    height, width, _ = img.shape
+    if height != width:
+        size = min(height, width)
+        x = int((width - size) / 2)
+        y = int((height - size) / 2)
+        img = img[y:y+size, x:x+size]
     # 转换到网络输入
     img = cv2.resize(img, (input_shape[0], input_shape[1]))
     data_input = np.array([img]).astype(np.float32) / 255.0
@@ -25,7 +32,8 @@ while success:
     result = model.predict(data_input)
     count = np.argmax(result[0])
     # 显示结果
-    cv2.putText(img, 'count:%d'%count, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
+    cv2.putText(img, 'count:%d'%count, (11, 21), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+    cv2.putText(img, 'count:%d'%count, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255))
     cv2.imshow('image', img)
     if cv2.waitKey(50) == 0:
         break
