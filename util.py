@@ -239,3 +239,38 @@ def crop_video(input, output, resize):
         success, img = input.read()
     input.release()
     output.release()
+
+def random_image(base_size, image, scale):
+    imge_size = image.shape[:2]
+    edge = (imge_size[0] * scale * 0.5, imge_size[1] * scale * 0.5)
+    pos = (np.random.randint(edge[0], base_size[0] - edge[0]), np.random.randint(edge[1], base_size[1] - edge[1]))
+    center = (imge_size[0] * 0.5, imge_size[1] * 0.5)
+    angle = np.random.randint(0, 360)
+    rot_mat = cv2.getRotationMatrix2D(center, angle, scale)
+    rot_mat[:, 2] += (pos[0] - center[0], pos[1] - center[1])
+    new_img = cv2.warpAffine(image, rot_mat, base_size, cv2.INTER_LINEAR, 0, cv2.BORDER_REPLICATE)
+    return new_img
+
+def build_image(image_list, size, scale, item_num):
+    ''' 随机组合n张小图片成一张大图片
+    '''
+    base_img = np.ones((size[0], size[1], 4))
+    for _ in range(item_num):
+        image_idx = np.random.randint(0, len(image_list))
+        random_img = random_image(base_img.shape[:2], image_list[image_idx], scale).astype(np.float32) / 255.0
+        alpha = random_img[:,:,3]
+        alpha = np.repeat(np.expand_dims(alpha, -1), (4,), -1)
+        base_img = base_img * (1 - alpha) + random_img * alpha
+    return base_img[:,:,0:3]
+
+def random_dataset(image_list, size, scale, num_classes, total_num):
+    ''' 随机生成数据集合
+    '''
+    data_list = []
+    label_list = []
+    for _ in range(total_num):
+        item_num = np.random.randint(1, num_classes + 1)
+        img = build_image(image_list, size, scale, item_num)
+        data_list.append(img)
+        label_list.append(label_list)
+    return (data_list, label_list)
