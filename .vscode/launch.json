@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [
-                "--train1",
+                "--train",
                 "--tb"
             ]
         }

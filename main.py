@@ -8,13 +8,14 @@ from keras.callbacks import TensorBoard
 epochs = 1000
 epoch_batch = 10
 epoch_save = 10
-load_num = 600
-batch_size = 200
+load_num = 200
+batch_size = 20
 num_classes = 20
 input_shape = (256, 256, 3)
-model_type = 'default' # ['vgg11', 'vgg16', 'minist', 'default']
+model_type = 'vgg11' # ['vgg11', 'vgg16', 'minist', 'default']
 weight_path = 'modle-%s.h5' % model_type
 log_dir = 'log'
+data_dir = 'data/item/*.png'
 
 #util.extract_video('data/validate/*.mp4', 5, input_shape)
 
@@ -36,7 +37,7 @@ if '--train' in sys.argv:
         tboard = TensorBoard(log_dir, batch_size=epoch_batch,write_grads=True)
         tboard.set_model(model)
 
-    util.train(model, 'data/image/*.*', 
+    util.train(model, data_dir, 
         epochs=epochs, 
         epoch_batch=epoch_batch,
         epoch_save=epoch_save, 
