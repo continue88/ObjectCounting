@@ -193,7 +193,7 @@ def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3)
                 if batch == 0:
                     print("[Epoch %d/%d] [Batch %d/%d] [D loss %f, acc: %3f%%]" % (epoch, epochs, test_i, epoch_batch, loss[0], loss[1] * 100))
             if tboard:
-                tboard.on_batch_end(batch, {'loss': loss[0], 'acc': loss[1]})
+                tboard.on_batch_end(batch, {'loss': loss[0], 'acc': loss[1], 'size': load_num})
         if tboard:
             tboard.on_epoch_end(epoch, {'loss': loss[0], 'acc': loss[1]})
     # finished.
