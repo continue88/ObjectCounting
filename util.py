@@ -3,6 +3,8 @@ import cv2
 import glob
 import numpy as np
 import keras
+import threading
+import time
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
@@ -120,15 +122,60 @@ def build_modle(input_shape=(256, 256, 3), num_classes=20, model_type='vgg16'):
         return build_minist(input_shape, num_classes)
     return build_default(input_shape, num_classes)
 
+class ImageGenerator(threading.Thread):
+    def __init__(self, data_path, size, scale, num_classes, load_num):
+        threading.Thread.__init__(self)
+        self.data_path = data_path
+        self.size = size
+        self.scale = scale
+        self.num_classes = num_classes
+        self.load_num = load_num
+        self.stop = False
+        self.data_set = None
+        self.thread_lock = threading.Lock()
+    
+    def fetch_images(self):
+        data_set = None
+        while not data_set:
+            if self.data_set:
+                self.thread_lock.acquire()
+                data_set = self.data_set
+                self.data_set = None
+                self.thread_lock.release()
+            else:
+                time.sleep(0.1)
+        return data_set
+    
+    def join(self):
+        self.stop = True
+        threading.Thread.join(self)
+
+    def run(self):
+        self.image_list = load_images(self.data_path)
+        while not self.stop:
+            if not self.data_set:
+                print('building data...')
+                scale = self.scale + np.random.random() * 0.05
+                data_set = random_dataset(self.image_list, self.size, scale, self.num_classes, self.load_num)
+                self.thread_lock.acquire()
+                self.data_set = data_set
+                self.thread_lock.release()
+                print('finished.')
+            else:
+                time.sleep(0.1)
 
 def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, epoch_batch=10, epoch_save=100, weight_path='modle.h5', tboard=None):
-    image_list = load_images(data_path)
+    # build our image generator.
+    size = (input_shape[0], input_shape[1])
+    image_generator = ImageGenerator(data_path, size, 0.2, num_classes, load_num)
+    image_generator.start()
+
+    # start training...
     for epoch in range(epochs):
         if (epoch + 1) % epoch_save == 0:
             model.save_weights(weight_path)
 
-        scale = 0.2 + np.random.random() * 0.05
-        data_set = random_dataset(image_list, (input_shape[0], input_shape[1]), scale, num_classes, load_num)
+        data_set = image_generator.fetch_images()
         y_train = keras.utils.to_categorical(data_set[1], num_classes)
         loss = None
         for test_i in range(epoch_batch):
@@ -149,9 +196,11 @@ def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3)
                 tboard.on_batch_end(batch, {'loss': loss[0], 'acc': loss[1]})
         if tboard:
             tboard.on_epoch_end(epoch, {'loss': loss[0], 'acc': loss[1]})
+    # finished.
     if tboard:
         tboard.on_train_end('done')
     model.save_weights(weight_path)
+    image_generator.join()
 
 def predict(model, validate_path, input_shape=(256, 256, 3), num_classes=20, load_num=200):
     test_set = load_dataset(validate_path, load_num, input_shape)
