@@ -123,6 +123,8 @@ def build_modle(input_shape=(256, 256, 3), num_classes=20, model_type='vgg16'):
     return build_default(input_shape, num_classes)
 
 class ImageGenerator(threading.Thread):
+    ''' The image builder thread. load single item images, gennerate images.
+    '''
     def __init__(self, data_path, size, scale, num_classes, load_num):
         threading.Thread.__init__(self)
         self.data_path = data_path
@@ -154,13 +156,11 @@ class ImageGenerator(threading.Thread):
         self.image_list = load_images(self.data_path)
         while not self.stop:
             if not self.data_set:
-                print('building data...')
                 scale = self.scale + np.random.random() * 0.05
                 data_set = random_dataset(self.image_list, self.size, scale, self.num_classes, self.load_num)
                 self.thread_lock.acquire()
                 self.data_set = data_set
                 self.thread_lock.release()
-                print('finished.')
             else:
                 time.sleep(0.1)
 
@@ -329,3 +329,9 @@ def load_images(path):
         img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
         image_list.append(img)
     return image_list
+
+def draw_text(image, text, pos=(10, 20), font_scale=0.5, color=(255, 255, 255), shadow=True):
+    if shadow:
+        cv2.putText(image, text, (pos[0] + 0, pos[1] + 1), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0))
+        cv2.putText(image, text, (pos[0] + 1, pos[1] + 0), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0))
+    cv2.putText(image, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, color)

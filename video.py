@@ -32,8 +32,7 @@ while success:
     result = model.predict(data_input)
     count = np.argmax(result[0])
     # 显示结果
-    cv2.putText(img, 'count:%d'%count, (11, 21), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
-    cv2.putText(img, 'count:%d'%count, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255))
+    util.draw_text(img, 'count:%d'%count)
     cv2.imshow('image', img)
     if cv2.waitKey(50) == 0:
         break
