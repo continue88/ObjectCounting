@@ -12,7 +12,7 @@ def test_random_atals(image_path='data/item/*.png', item_size=(256, 256), atlas_
         for i in range(grid):
             images = []
             for j in range(grid):
-                item_num = np.random.randint(0, 20)
+                item_num = np.random.randint(1, 20)
                 img = util.build_image(image_list, item_size, scale, item_num)
                 images.append(img)
             row_images.append(cv2.hconcat(images))

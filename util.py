@@ -316,7 +316,7 @@ def random_dataset(image_list, size, scale, num_classes, total_num):
     data_list = []
     label_list = []
     for _ in range(total_num):
-        item_num = np.random.randint(0, num_classes)
+        item_num = np.random.randint(1, num_classes)
         img = build_image(image_list, size, scale, item_num)
         data_list.append(img)
         label_list.append(item_num)
