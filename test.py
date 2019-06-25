@@ -4,7 +4,9 @@ import cv2
 import util
 import numpy as np
 
-def test_random_atals(image_path='data/item/*.png', item_size=(256, 256), atlas_size=(1024, 1024), scale=0.2):
+image_path = 'data/item/*.png'
+
+def test_random_atals(image_path, item_size=(256, 256), atlas_size=(1024, 1024), scale=0.2):
     grid = int(atlas_size[0] / item_size[0])
     image_list = util.load_images(image_path)
     while True:
@@ -27,4 +29,18 @@ def test_random_atals(image_path='data/item/*.png', item_size=(256, 256), atlas_
         cv2.imshow('image', image)
         cv2.waitKey(50)
 
-test_random_atals()
+def test_rotate_image(image_path, item_size=(256, 256), scale=0.2, item_num=6):
+    image_list = util.load_images(image_path)
+    image = util.build_image(image_list, item_size, scale, item_num)
+    image = np.clip(image * 255, 0, 255).astype(np.uint8)
+    while True:
+        angle = np.random.randint(0, 360)
+        rot_image = util.rotate_image(image, angle)
+        util.draw_text(rot_image, 'angle: %d' % angle, color=(255, 0, 0))
+        cv2.imshow('image', rot_image)
+        key = cv2.waitKey(1000000) & 0xFF
+        if key == 27: # 'esc
+            break
+
+test_random_atals(image_path)
+#test_rotate_image(image_path)
