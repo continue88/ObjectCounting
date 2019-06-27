@@ -170,6 +170,8 @@ def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3)
     image_generator = ImageGenerator(data_path, size, 0.2, num_classes, load_num)
     image_generator.start()
 
+    rot_angles = [0, 90, 180, 270]
+
     # start training...
     for epoch in range(epochs):
         if (epoch + 1) % epoch_save == 0:
@@ -179,7 +181,7 @@ def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3)
         y_train = keras.utils.to_categorical(data_set[1], num_classes)
         loss = None
         for test_i in range(epoch_batch):
-            x_train = rotate_images(data_set[0])
+            x_train = rotate_images(data_set[0], rot_angles)
             train_num = len(x_train)#.shape[0]
             n_batches = int((train_num + batch_size - 1) / batch_size)
             for batch in range(n_batches):
@@ -242,10 +244,13 @@ def rotate_image(image, angle):
     new_img = cv2.warpAffine(image, rot_mat, (col, row), cv2.INTER_LINEAR, 0, cv2.BORDER_REPLICATE)
     return new_img
 
-def rotate_images(image_list):
+def rotate_images(image_list, angles=None):
     rot_images = []
     for img in image_list:
-        angle = np.random.randint(0, 360)
+        if angles != None:
+            angle = angles[np.random.randint(0, len(angles))]
+        else:
+            angle = np.random.randint(0, 360)
         img = rotate_image(img, angle)
         rot_images.append(img)
     return np.array(rot_images)
@@ -287,15 +292,18 @@ def crop_video(input, output, resize):
     input.release()
     output.release()
 
-def random_image(base_size, image, scale):
+def random_image(base_size, image, scale, large_scale = 2):
+    large_size = (base_size[0] * large_scale, base_size[1] * large_scale)
+    scale = scale * large_scale
     imge_size = image.shape[:2]
     edge = (imge_size[0] * scale * 0.5, imge_size[1] * scale * 0.5)
-    pos = (np.random.randint(edge[0], base_size[0] - edge[0]), np.random.randint(edge[1], base_size[1] - edge[1]))
+    pos = (np.random.randint(edge[0], large_size[0] - edge[0]), np.random.randint(edge[1], large_size[1] - edge[1]))
     center = (imge_size[0] * 0.5, imge_size[1] * 0.5)
     angle = np.random.randint(0, 360)
     rot_mat = cv2.getRotationMatrix2D(center, angle, scale)
     rot_mat[:, 2] += (pos[0] - center[0], pos[1] - center[1])
-    new_img = cv2.warpAffine(image, rot_mat, base_size, cv2.INTER_LINEAR, 0, cv2.BORDER_REPLICATE)
+    new_img = cv2.warpAffine(image, rot_mat, large_size, cv2.INTER_LINEAR, 0, cv2.BORDER_REPLICATE)
+    new_img = cv2.resize(new_img, (base_size[1], base_size[0]))
     return new_img
 
 def build_image(image_list, size, scale, item_num):

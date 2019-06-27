@@ -15,7 +15,8 @@ def test_random_atals(image_path, item_size=(256, 256), atlas_size=(1024, 1024),
             images = []
             for j in range(grid):
                 item_num = np.random.randint(1, 20)
-                img = util.build_image(image_list, item_size, scale, item_num)
+                tmp_scale = scale + np.random.random() * 0.05
+                img = util.build_image(image_list, item_size, tmp_scale, item_num)
                 images.append(img)
             row_images.append(cv2.hconcat(images))
         image = cv2.vconcat(row_images)
@@ -32,15 +33,16 @@ def test_random_atals(image_path, item_size=(256, 256), atlas_size=(1024, 1024),
 def test_rotate_image(image_path, item_size=(256, 256), scale=0.2, item_num=6):
     image_list = util.load_images(image_path)
     image = util.build_image(image_list, item_size, scale, item_num)
-    image = np.clip(image * 255, 0, 255).astype(np.uint8)
+    angles = [0, 90, 180, 270]
     while True:
-        angle = np.random.randint(0, 360)
-        rot_image = util.rotate_image(image, angle)
+        angle = angles[np.random.randint(0, len(angles))]
+        rot_image = np.clip(image * 255, 0, 255).astype(np.uint8)
+        rot_image = util.rotate_image(rot_image, angle)
         util.draw_text(rot_image, 'angle: %d' % angle, color=(255, 0, 0))
         cv2.imshow('image', rot_image)
         key = cv2.waitKey(1000000) & 0xFF
         if key == 27: # 'esc
             break
 
-test_random_atals(image_path)
-#test_rotate_image(image_path)
+#test_random_atals(image_path)
+test_rotate_image(image_path)
