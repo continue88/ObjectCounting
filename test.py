@@ -33,6 +33,9 @@ def test_random_atals(image_path, item_size=(256, 256), atlas_size=(1024, 1024),
 def test_rotate_image(image_path, item_size=(256, 256), scale=0.2, item_num=6):
     image_list = util.load_images(image_path)
     image = util.build_image(image_list, item_size, scale, item_num)
+    pixels = image.reshape(-1, image.shape[2])
+    unique_elements, counts_elements = np.unique(pixels, axis=0, return_counts=True)
+    counts_elements = np.sort(counts_elements)[::-1]
     angles = [0, 90, 180, 270]
     while True:
         angle = angles[np.random.randint(0, len(angles))]

@@ -7,7 +7,7 @@ import threading
 import time
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
-from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import Conv2D, MaxPooling2D, LeakyReLU
 
 def build_minist(input_shape, num_classes):
     model = Sequential()
@@ -27,13 +27,13 @@ def build_minist(input_shape, num_classes):
 def build_default(input_shape, num_classes):
     model = Sequential()
     # (256, 256, 3)
-    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape, padding='same'))
     model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
     # (64, 64, 64)
-    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
     # (16, 16, 128)
-    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
     # (4, 4, 256)
     model.add(Flatten())
@@ -47,22 +47,22 @@ def build_default(input_shape, num_classes):
 def build_vgg11(input_shape, num_classes):
     model = Sequential()
     # (224, 224, 3)
-    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape, padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (112, 112, 64)
-    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (56, 56, 128)
-    model.add(Conv2D(256, (3, 3), activation='relu'))
-    model.add(Conv2D(256, (3, 3), activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (28, 28, 256)
-    model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (14, 14, 512)
-    model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (7, 7, 512)
     model.add(Flatten())
@@ -79,27 +79,27 @@ def build_vgg11(input_shape, num_classes):
 def build_vgg16(input_shape, num_classes):
     model = Sequential()
     # (224, 224, 3)
-    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape, padding='same'))
+    model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (112, 112, 64)
-    model.add(Conv2D(128, (3, 3), activation='relu'))
-    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (56, 56, 128)
-    model.add(Conv2D(256, (3, 3), activation='relu'))
-    model.add(Conv2D(256, (3, 3), activation='relu'))
-    model.add(Conv2D(256, (3, 3), activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (28, 28, 256)
-    model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (14, 14, 512)
-    model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(Conv2D(512, (3, 3), activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # (7, 7, 512)
     model.add(Flatten())
@@ -154,6 +154,7 @@ class ImageGenerator(threading.Thread):
 
     def run(self):
         self.image_list = load_images(self.data_path)
+        
         while not self.stop:
             if not self.data_set:
                 scale = self.scale + np.random.random() * 0.05
@@ -304,18 +305,19 @@ def random_image(base_size, image, scale, large_scale = 2):
     rot_mat[:, 2] += (pos[0] - center[0], pos[1] - center[1])
     new_img = cv2.warpAffine(image, rot_mat, large_size, cv2.INTER_LINEAR, 0, cv2.BORDER_REPLICATE)
     new_img = cv2.resize(new_img, (base_size[1], base_size[0]))
-    return new_img
+    return (new_img, float(pos[0]) / large_size[0], float(pos[1]) / large_size[1], angle / 360.0)
 
 def build_image(image_list, size, scale, item_num):
     ''' 随机组合n张小图片成一张大图片
     '''
-    base_img = np.ones((size[0], size[1], 4))
+    base_img = np.zeros((size[0], size[1], 4))
     for _ in range(item_num):
         image_idx = np.random.randint(0, len(image_list))
-        random_img = random_image(base_img.shape[:2], image_list[image_idx], scale).astype(np.float32) / 255.0
+        img_data = random_image(base_img.shape[:2], image_list[image_idx], scale)
+        random_img = img_data[0].astype(np.float32) / 255.0
         alpha = random_img[:,:,3]
         alpha = np.repeat(np.expand_dims(alpha, -1), (4,), -1)
-        base_img = base_img * (1 - alpha) + random_img * alpha
+        base_img = base_img * (1 - alpha) + alpha * (img_data[1], img_data[2], img_data[3], 1)
     return base_img[:,:,0:3]
 
 def random_dataset(image_list, size, scale, num_classes, total_num):
@@ -335,6 +337,10 @@ def load_images(path):
     image_list = []
     for file in file_list:
         img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+        height, width, _ = img.shape
+        for i in range(width):
+            for j in range(height):
+                img[i, j, :3] = (i * 255 / width, j * 255 / width, 0)
         image_list.append(img)
     return image_list
 
