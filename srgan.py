@@ -138,11 +138,11 @@ class SRGAN():
         c2 = Add()([c2, c1])
 
         # Upsampling
-        u1 = deconv2d(c2)
-        u2 = deconv2d(u1)
+        #u1 = deconv2d(c2)
+        #u2 = deconv2d(u1)
 
         # Generate high resolution output
-        gen_hr = Conv2D(self.channels, kernel_size=9, strides=1, padding='same', activation='tanh')(u2)
+        gen_hr = Conv2D(self.channels, kernel_size=9, strides=1, padding='same', activation='tanh')(c2)
 
         return Model(img_lr, gen_hr)
 
@@ -231,4 +231,4 @@ class SRGAN():
 
 if __name__ == '__main__':
     gan = SRGAN()
-    gan.train(epochs=30000, batch_size=10, save_interval=50)
+    gan.train(epochs=30000, batch_size=1, save_interval=50)
