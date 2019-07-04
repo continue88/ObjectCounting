@@ -222,6 +222,9 @@ class SRGAN():
             print ("%d time: %s" % (epoch, elapsed_time))
 
     def load_weights(self, path='data/weights'):
+        os.makedirs(path, exist_ok=True)
+        if not os.path.exists(path + '/G.h5'):
+            return
         self.generator.load_weights(path + '/G.h5')
         self.discriminator.load_weights(path + '/D.h5')
 
@@ -231,4 +234,5 @@ class SRGAN():
 
 if __name__ == '__main__':
     gan = SRGAN()
+    gan.load_weights()
     gan.train(epochs=30000, batch_size=1, save_interval=50)
