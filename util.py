@@ -9,6 +9,14 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D, LeakyReLU
 
+def build_h128(input_shape, num_classes, features = 128, alpha = 0.1, loop = 4):
+    n = features
+    x = Input(input_shape)
+    for _ in range(loop):
+        x = Conv2D(n, 5, strides=2, padding='same')(x)
+        x = LeakyReLU(alpha)(x)
+        n *= 2
+        
 def build_minist(input_shape, num_classes):
     model = Sequential()
     model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
@@ -317,8 +325,24 @@ def build_image(image_list, size, scale, item_num):
         random_img = img_data[0].astype(np.float32) / 255.0
         alpha = random_img[:,:,3]
         alpha = np.repeat(np.expand_dims(alpha, -1), (4,), -1)
-        base_img = base_img * (1 - alpha) + alpha * (img_data[1], img_data[2], img_data[3], 1)
+        base_img = base_img * (1 - alpha) + alpha * random_img
     return base_img[:,:,0:3]
+
+def build_image_set(image_list, size, scale, item_num):
+    ''' 随机组合n张小图片成一张大图片
+    '   返回原图，位置/旋转图（同样大小）
+    '''
+    base_img = np.zeros((size[0], size[1], 4))
+    pos_img = np.zeros((size[0], size[1], 4))
+    for _ in range(item_num):
+        image_idx = np.random.randint(0, len(image_list))
+        img_data = random_image(base_img.shape[:2], image_list[image_idx], scale)
+        random_img = img_data[0].astype(np.float32) / 255.0
+        alpha = random_img[:,:,3]
+        alpha = np.repeat(np.expand_dims(alpha, -1), (4,), -1)
+        base_img = base_img * (1 - alpha) + alpha * random_img
+        pos_img = pos_img * (1 - alpha) + alpha * (img_data[1], img_data[2], img_data[3], 1)
+    return (base_img[:,:,0:3], pos_img[:,:,0:3])
 
 def random_dataset(image_list, size, scale, num_classes, total_num):
     ''' 随机生成数据集合
@@ -332,15 +356,16 @@ def random_dataset(image_list, size, scale, num_classes, total_num):
         label_list.append(item_num)
     return (np.array(data_list), label_list)
 
-def load_images(path):
+def load_images(path, uv=False):
     file_list = glob.glob(path)
     image_list = []
     for file in file_list:
         img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
-        height, width, _ = img.shape
-        for i in range(width):
-            for j in range(height):
-                img[i, j, :3] = (i * 255 / width, j * 255 / width, 0)
+        if uv:
+            height, width, _ = img.shape
+            for i in range(width):
+                for j in range(height):
+                    img[i, j, :3] = (i * 255 / width, j * 255 / width, 0)
         image_list.append(img)
     return image_list
 

@@ -47,5 +47,5 @@ def test_rotate_image(image_path, item_size=(256, 256), scale=0.2, item_num=6):
         if key == 27: # 'esc
             break
 
-#test_random_atals(image_path)
-test_rotate_image(image_path)
+test_random_atals(image_path)
+#test_rotate_image(image_path)
