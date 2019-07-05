@@ -42,8 +42,6 @@ class SRGAN():
 
         # Configure data loader
         self.dataset_name = 'data'
-        self.data_builder = DataBuilder(data_path='data/item/*.png', size=(self.hr_height, self.hr_width))
-        self.data_builder.start()
 
         # Calculate output shape of D (PatchGAN)
         patch = int(self.hr_height / 2**4)
@@ -83,6 +81,7 @@ class SRGAN():
                               loss_weights=[1e-3, 1],
                               optimizer=optimizer)
 
+        self.load_weights()
 
     def build_vgg(self):
         """
@@ -174,9 +173,14 @@ class SRGAN():
 
         return Model(d0, validity)
 
+    def predict(self, input):
+        return self.generator.predict(input)
+
     def train(self, epochs, batch_size=1, save_interval=50):
 
         start_time = datetime.datetime.now()
+        self.data_builder = DataBuilder(data_path='data/item/*.png', size=(self.hr_height, self.hr_width))
+        self.data_builder.start()
 
         for epoch in range(epochs):
             # If at save interval => save generated image samples
@@ -217,14 +221,19 @@ class SRGAN():
             # Train the generators
             g_loss = self.combined.train_on_batch([imgs_lr, imgs_hr], [valid, image_features])
 
-            elapsed_time = datetime.datetime.now() - start_time
+            #elapsed_time = datetime.datetime.now() - start_time
             # Plot the progress
-            print ("%d time: %s" % (epoch, elapsed_time))
+            print ("Epoch[%d/%d] %s[%f] %s[%f] %s[%f]" % (
+                epoch, epochs, 
+                self.combined.metrics_names[0], g_loss[0], 
+                self.combined.metrics_names[1], g_loss[1], 
+                self.combined.metrics_names[2], g_loss[2]))
 
     def load_weights(self, path='data/weights'):
         os.makedirs(path, exist_ok=True)
         if not os.path.exists(path + '/G.h5'):
             return
+        print('load weight from %s' % path)
         self.generator.load_weights(path + '/G.h5')
         self.discriminator.load_weights(path + '/D.h5')
 
@@ -234,5 +243,4 @@ class SRGAN():
 
 if __name__ == '__main__':
     gan = SRGAN()
-    gan.load_weights()
-    gan.train(epochs=30000, batch_size=1, save_interval=50)
+    gan.train(epochs=30000, batch_size=10, save_interval=50)

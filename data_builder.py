@@ -37,6 +37,7 @@ class DataBuilder(threading.Thread):
         end = min(self.pending_index + batch_size, self.load_num)
         data_set = (self.pending_data[0][self.pending_index:end], 
             self.pending_data[1][self.pending_index:end])
+        self.pending_index += batch_size
         if end == self.load_num:
             self.pending_data = None
         return data_set
