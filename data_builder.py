@@ -33,6 +33,7 @@ class DataBuilder(threading.Thread):
 
     def load_data(self, batch_size):
         if not self.pending_data:
+            self.pending_index = 0
             self.pending_data = self.fetch_images()
         end = min(self.pending_index + batch_size, self.load_num)
         data_set = (self.pending_data[0][self.pending_index:end], 
