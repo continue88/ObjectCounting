@@ -5,6 +5,7 @@ import numpy as np
 import keras
 import threading
 import time
+import platform
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Dropout
 from keras.layers import Conv2D, MaxPooling2D, LeakyReLU, Reshape
@@ -103,7 +104,7 @@ def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3)
         y_train = data_set[1]
         loss = None
 
-        if epoch % validate == 0:
+        if platform.system() == 'Windows' and epoch % validate == 0:
             x_test = image_generator.validate[0]
             y_test = image_generator.validate[1]
             y_predict = model.predict(np.array([x_test]))
@@ -228,7 +229,7 @@ def random_image(base_size, image, scale, large_scale = 2):
     edge = (imge_size[0] * scale * 0.5, imge_size[1] * scale * 0.5)
     pos = (np.random.randint(edge[0], large_size[0] - edge[0]), np.random.randint(edge[1], large_size[1] - edge[1]))
     center = (imge_size[0] * 0.5, imge_size[1] * 0.5)
-    angle = np.random.randint(0, 360)
+    angle = np.random.rand() * 360
     rot_mat = cv2.getRotationMatrix2D(center, angle, scale)
     rot_mat[:, 2] += (pos[0] - center[0], pos[1] - center[1])
     new_img = cv2.warpAffine(image, rot_mat, large_size, cv2.INTER_LINEAR, 0, cv2.BORDER_REPLICATE)
