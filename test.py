@@ -6,7 +6,7 @@ import numpy as np
 
 image_path = 'data/item/*.png'
 
-def test_random_atals(image_path, item_size=(256, 256), atlas_size=(1024, 1024), scale=0.2):
+def test_random_atals(image_path, item_size=(128, 128), atlas_size=(1024, 1024), scale=0.2):
     grid = int(atlas_size[0] / item_size[0])
     image_list = util.load_images(image_path)
     while True:
@@ -61,6 +61,6 @@ def test_srgan(image_path, item_size=(256, 256), scale=0.2, item_num=6):
         if key == 27: # 'esc
             break
 
-#test_random_atals(image_path)
+test_random_atals(image_path)
 #test_rotate_image(image_path)
-test_srgan(image_path)
+#test_srgan(image_path)
