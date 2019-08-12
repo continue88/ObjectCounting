@@ -6,13 +6,14 @@ import keras
 from keras.callbacks import TensorBoard
 
 epochs = 1000
+epoch_batch = 10
 epoch_save = 10
-load_num = 50
-batch_size = 2
+load_num = 200
+batch_size = 10
 num_classes = 20
 input_shape = (256, 256, 3)
-model_type = 'h128' # ['vgg11', 'vgg16', 'minist', 'default']
-weight_path = 'data/weights/modle-%s.h5' % model_type
+model_type = 'default' # ['vgg11', 'vgg16', 'minist', 'default']
+weight_path = 'modle-%s.h5' % model_type
 log_dir = 'log'
 data_dir = 'data/item/*.png'
 
@@ -33,11 +34,12 @@ if '--train' in sys.argv:
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
         print('using tensor board at: ' + log_dir)
-        tboard = TensorBoard(log_dir,write_grads=True)
+        tboard = TensorBoard(log_dir, batch_size=epoch_batch,write_grads=True)
         tboard.set_model(model)
 
     util.train(model, data_dir, 
         epochs=epochs, 
+        epoch_batch=epoch_batch,
         epoch_save=epoch_save, 
         input_shape=input_shape, 
         num_classes=num_classes, 

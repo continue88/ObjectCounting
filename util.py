@@ -5,58 +5,135 @@ import numpy as np
 import keras
 import threading
 import time
-import platform
-from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Dropout
-from keras.layers import Conv2D, MaxPooling2D, LeakyReLU, Reshape
-from keras.layers import Flatten, UpSampling2D
-from keras import backend as K
-from pixel_shuffler import PixelShuffler
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D, LeakyReLU
 
-def ObjectCountingLoss(y_true, y_pred):
-    scale = K.clip((1 - y_true) * 255, 0, 1) + 1
-    return K.mean(K.square(y_pred - y_true) * scale, axis=-1)
-
-def build_h128(input_shape, num_classes, features = 32, alpha = 0.1, loop = 4):
-    input = Input(input_shape)
-    x = input # [256, 256, 3]
-    x = LeakyReLU(alpha)(Conv2D(features *  1, kernel_size=5, strides=2, padding='same')(x)) # [128, 128,   64]
-    x = LeakyReLU(alpha)(Conv2D(features *  2, kernel_size=5, strides=2, padding='same')(x)) # [ 64,  64,  128]
-    x = LeakyReLU(alpha)(Conv2D(features *  4, kernel_size=5, strides=2, padding='same')(x)) # [ 32,  32,  256]
-    x = LeakyReLU(alpha)(Conv2D(features *  8, kernel_size=5, strides=2, padding='same')(x)) # [ 16,  16,  512]
-    x = LeakyReLU(alpha)(Conv2D(features * 16, kernel_size=5, strides=2, padding='same')(x)) # [  8,   8, 1024]
-    x = Dense(512)(Flatten()(x))
-    x = Dense(8 * 8 * 1024)(x)
-    x = Reshape((8, 8, 1024))(x) # [8, 8, 1024]
-    x = PixelShuffler()(LeakyReLU(0.1)(Conv2D(512 * 4, 3, strides=1, padding='same')(x))) # [16, 16, 512]
-    x = PixelShuffler()(LeakyReLU(0.1)(Conv2D(256 * 4, 3, strides=1, padding='same')(x))) # [32, 32, 256]
-    x = PixelShuffler()(LeakyReLU(0.1)(Conv2D(128 * 4, 3, strides=1, padding='same')(x))) # [64, 64, 128]
-    x = PixelShuffler()(LeakyReLU(0.1)(Conv2D(64 * 4, 3, strides=1, padding='same')(x))) # [128, 128, 64]
-    x = PixelShuffler()(LeakyReLU(0.1)(Conv2D(32 * 4, 3, strides=1, padding='same')(x))) # [256, 256, 32]
-    x = Conv2D(3, kernel_size=5, padding='same', activation='sigmoid')(x) # (256, 256, 3)
-    model = Model(input, x)
-    model.compile(loss=ObjectCountingLoss,
+def build_minist(input_shape, num_classes):
+    model = Sequential()
+    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
+    model.compile(loss=keras.losses.categorical_crossentropy,
                 optimizer=keras.optimizers.Adadelta(),
                 metrics=['accuracy'])
     return model
-    
+
+def build_default(input_shape, num_classes):
+    model = Sequential()
+    # (256, 256, 3)
+    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape, padding='same'))
+    model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
+    # (64, 64, 64)
+    model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
+    # (16, 16, 128)
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
+    # (4, 4, 256)
+    model.add(Flatten())
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
+    model.compile(loss='mse',#keras.losses.categorical_crossentropy,
+                optimizer=keras.optimizers.Adadelta(),
+                metrics=['accuracy'])
+    return model
+
+def build_vgg11(input_shape, num_classes):
+    model = Sequential()
+    # (224, 224, 3)
+    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape, padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (112, 112, 64)
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (56, 56, 128)
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (28, 28, 256)
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (14, 14, 512)
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (7, 7, 512)
+    model.add(Flatten())
+    model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.25))
+    model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.25))
+    model.add(Dense(num_classes, activation='softmax'))
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                optimizer=keras.optimizers.Adadelta(),
+                metrics=['accuracy'])
+    return model
+
+def build_vgg16(input_shape, num_classes):
+    model = Sequential()
+    # (224, 224, 3)
+    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape, padding='same'))
+    model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (112, 112, 64)
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (56, 56, 128)
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (28, 28, 256)
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (14, 14, 512)
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # (7, 7, 512)
+    model.add(Flatten())
+    model.add(Dense(4096, activation='relu'))
+    model.add(Dropout(0.25))
+    model.add(Dense(4096, activation='relu'))
+    model.add(Dropout(0.25))
+    model.add(Dense(num_classes, activation='softmax'))
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                optimizer=keras.optimizers.Adadelta(),
+                metrics=['accuracy'])
+    return model
+
 def build_modle(input_shape=(256, 256, 3), num_classes=20, model_type='vgg16'):
-    return build_h128(input_shape, num_classes)
+    if model_type == 'vgg16':
+        return build_vgg16(input_shape, num_classes)
+    if model_type == 'vgg11':
+        return build_vgg11(input_shape, num_classes)
+    if model_type == 'minist':
+        return build_minist(input_shape, num_classes)
+    return build_default(input_shape, num_classes)
 
 class ImageGenerator(threading.Thread):
     ''' The image builder thread. load single item images, gennerate images.
     '''
-    def __init__(self, data_path, size, scale, num_classes, load_num, val_num=6):
+    def __init__(self, data_path, size, scale, num_classes, load_num):
         threading.Thread.__init__(self)
         self.data_path = data_path
         self.size = size
         self.scale = scale
         self.num_classes = num_classes
         self.load_num = load_num
-        self.val_num = val_num
         self.stop = False
         self.data_set = None
-        self.validate = None
         self.thread_lock = threading.Lock()
     
     def fetch_images(self):
@@ -77,7 +154,7 @@ class ImageGenerator(threading.Thread):
 
     def run(self):
         self.image_list = load_images(self.data_path)
-        self.validate = build_image_set(self.image_list, self.size, self.scale, self.val_num)
+        
         while not self.stop:
             if not self.data_set:
                 scale = self.scale + np.random.random() * 0.05
@@ -88,11 +165,13 @@ class ImageGenerator(threading.Thread):
             else:
                 time.sleep(0.1)
 
-def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, validate=10, epoch_save=100, weight_path='modle.h5', tboard=None):
+def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3), num_classes=20, batch_size=40, epoch_batch=10, epoch_save=100, weight_path='modle.h5', tboard=None):
     # build our image generator.
     size = (input_shape[0], input_shape[1])
     image_generator = ImageGenerator(data_path, size, 0.2, num_classes, load_num)
     image_generator.start()
+
+    rot_angles = [0, 90, 180, 270]
 
     # start training...
     for epoch in range(epochs):
@@ -100,32 +179,24 @@ def train(model, data_path, epochs=1000, load_num=200, input_shape=(256, 256, 3)
             model.save_weights(weight_path)
 
         data_set = image_generator.fetch_images()
-        x_train = data_set[0]
-        y_train = data_set[1]
+        y_train = keras.utils.to_categorical(data_set[1], num_classes)
         loss = None
-
-        if platform.system() == 'Windows' and epoch % validate == 0:
-            x_test = image_generator.validate[0]
-            y_test = image_generator.validate[1]
-            y_predict = model.predict(np.array([x_test]))
-            img_test = cv2.hconcat([x_test, y_test, y_predict[0]])
-            img_test = np.clip(img_test * 255, 0, 255).astype(np.uint8)
-            cv2.imshow('image', img_test)
-            cv2.waitKey(10)
-        
-        train_num = len(x_train)#.shape[0]
-        n_batches = int((train_num + batch_size - 1) / batch_size)
-        for batch in range(n_batches):
-            start = batch * batch_size
-            end = (batch + 1) * batch_size
-            if end > train_num:
-                end = train_num
-            x_batch = x_train[start:end]
-            y_batch = y_train[start:end]
-            loss = model.train_on_batch(x_batch, y_batch)
-            if batch == 0:
-                print("[Epoch %d/%d] [Batch %d/%d] [D loss %f, acc: %3f%%]" % (epoch, epochs, batch, n_batches, loss[0], loss[1] * 100))
-
+        for test_i in range(epoch_batch):
+            x_train = rotate_images(data_set[0], rot_angles)
+            train_num = len(x_train)#.shape[0]
+            n_batches = int((train_num + batch_size - 1) / batch_size)
+            for batch in range(n_batches):
+                start = batch * batch_size
+                end = (batch + 1) * batch_size
+                if end > train_num:
+                    end = train_num
+                x_batch = x_train[start:end]
+                y_batch = y_train[start:end]
+                loss = model.train_on_batch(x_batch, y_batch)
+                if batch == 0:
+                    print("[Epoch %d/%d] [Batch %d/%d] [D loss %f, acc: %3f%%]" % (epoch, epochs, test_i, epoch_batch, loss[0], loss[1] * 100))
+            if tboard:
+                tboard.on_batch_end(batch, {'loss': loss[0], 'acc': loss[1], 'size': load_num})
         if tboard:
             tboard.on_epoch_end(epoch, {'loss': loss[0], 'acc': loss[1]})
     # finished.
@@ -229,7 +300,7 @@ def random_image(base_size, image, scale, large_scale = 2):
     edge = (imge_size[0] * scale * 0.5, imge_size[1] * scale * 0.5)
     pos = (np.random.randint(edge[0], large_size[0] - edge[0]), np.random.randint(edge[1], large_size[1] - edge[1]))
     center = (imge_size[0] * 0.5, imge_size[1] * 0.5)
-    angle = np.random.rand() * 360
+    angle = np.random.randint(0, 360)
     rot_mat = cv2.getRotationMatrix2D(center, angle, scale)
     rot_mat[:, 2] += (pos[0] - center[0], pos[1] - center[1])
     new_img = cv2.warpAffine(image, rot_mat, large_size, cv2.INTER_LINEAR, 0, cv2.BORDER_REPLICATE)
@@ -243,27 +314,11 @@ def build_image(image_list, size, scale, item_num):
     for _ in range(item_num):
         image_idx = np.random.randint(0, len(image_list))
         img_data = random_image(base_img.shape[:2], image_list[image_idx], scale)
-        random_img = img_data[0]
+        random_img = img_data[0].astype(np.float32) / 255.0
         alpha = random_img[:,:,3]
         alpha = np.repeat(np.expand_dims(alpha, -1), (4,), -1)
-        base_img = base_img * (1 - alpha) + alpha * random_img
+        base_img = base_img * (1 - alpha) + alpha * random_img#(img_data[1], img_data[2], img_data[3], 1)
     return base_img[:,:,0:3]
-
-def build_image_set(image_list, size, scale, item_num):
-    ''' 随机组合n张小图片成一张大图片
-    '   返回原图，位置/旋转图（同样大小）
-    '''
-    base_img = np.zeros((size[0], size[1], 4), np.float32)
-    pos_img = np.zeros((size[0], size[1], 4), np.float32)
-    for _ in range(item_num):
-        image_idx = np.random.randint(0, len(image_list))
-        img_data = random_image(base_img.shape[:2], image_list[image_idx], scale)
-        random_img = img_data[0]
-        alpha = random_img[:,:,3]
-        alpha = np.repeat(np.expand_dims(alpha, -1), (4,), -1)
-        base_img = base_img * (1 - alpha) + alpha * random_img
-        pos_img = pos_img * (1 - alpha) + alpha * np.float32([img_data[1], img_data[2], img_data[3], 1])
-    return (base_img[:,:,0:3], pos_img[:,:,0:3])
 
 def random_dataset(image_list, size, scale, num_classes, total_num):
     ''' 随机生成数据集合
@@ -272,23 +327,16 @@ def random_dataset(image_list, size, scale, num_classes, total_num):
     label_list = []
     for _ in range(total_num):
         item_num = np.random.randint(1, num_classes)
-        img = build_image_set(image_list, size, scale, item_num)
-        data_list.append(img[0])
-        label_list.append(img[1])
-    return (np.array(data_list), np.array(label_list))
+        img = build_image(image_list, size, scale, item_num)
+        data_list.append(img)
+        label_list.append(item_num)
+    return (np.array(data_list), label_list)
 
-def load_images(path, uv=False):
+def load_images(path):
     file_list = glob.glob(path)
     image_list = []
     for file in file_list:
         img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
-        if uv:
-            height, width, _ = img.shape
-            for i in range(width):
-                for j in range(height):
-                    img[i, j, :3] = (float(i) / width, float(j) / width, 0)
-        else:
-            img = img.astype(np.float32) / 255.0
         image_list.append(img)
     return image_list
 
